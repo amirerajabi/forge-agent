@@ -1,0 +1,19 @@
+appId: dev.forge.agent
+productName: Forge
+directories:
+  output: ../release
+files:
+  - out/**
+  - package.json
+extraResources:
+  - from: ../ui/dist
+    to: ui
+win:
+  target: nsis
+  icon: build/icon.ico
+  artifactName: Forge-${version}-${arch}.${ext}
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+

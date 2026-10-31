@@ -1,0 +1,13 @@
+{
+  "name": "forge-agent",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "install:all": "npm --prefix ui install && npm --prefix desktop install",
+    "dev": "powershell -ExecutionPolicy Bypass -File scripts/dev.ps1",
+    "build": "powershell -ExecutionPolicy Bypass -File scripts/build.ps1",
+    "typecheck": "npm --prefix ui run typecheck && npm --prefix desktop run typecheck",
+    "dist": "npm run build && npm --prefix desktop run dist"
+  }
+}
+

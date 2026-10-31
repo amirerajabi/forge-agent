@@ -1,13 +1,16 @@
 {
   "name": "forge-agent-desktop",
   "productName": "Forge",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A focused desktop coding agent for GLM and OpenAI-compatible models",
   "author": "Forge contributors",
   "license": "UNLICENSED",
   "private": true,
   "main": "out/main.js",
   "type": "commonjs",
+  "dependencies": {
+    "electron-updater": "6.8.9"
+  },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "bundle": "node build/bundle.mjs",
@@ -24,4 +27,3 @@
     "typescript": "6.0.3"
   }
 }
-

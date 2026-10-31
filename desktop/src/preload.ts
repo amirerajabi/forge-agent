@@ -19,6 +19,17 @@ contextBridge.exposeInMainWorld('forge', {
     ipcRenderer.on('agent:event', listener);
     return () => ipcRenderer.removeListener('agent:event', listener);
   },
+  openExternal: (url: string): void => ipcRenderer.send('shell:open', String(url)),
+  onUpdateStatus: (callback: (status: unknown) => void) => {
+    const listener = (_event: unknown, status: unknown) => callback(status);
+    ipcRenderer.on('update:status', listener);
+    return () => ipcRenderer.removeListener('update:status', listener);
+  },
+  getUpdateStatus: () => ipcRenderer.invoke('update:status'),
+  checkForUpdates: (options?: { manual?: boolean }) => ipcRenderer.invoke('update:check', { manual: options?.manual === true }),
+  configureUpdates: (options: { autoCheck: boolean }) => ipcRenderer.invoke('update:configure', { autoCheck: options.autoCheck === true }),
+  quitAndInstall: () => ipcRenderer.invoke('update:install'),
+  showNotification: (value: { title: string; body: string }) => ipcRenderer.invoke('notify', { title: String(value.title), body: String(value.body) }),
   minimize: (): void => ipcRenderer.send('window:minimize'),
   maximize: (): void => ipcRenderer.send('window:maximize'),
   close: (): void => ipcRenderer.send('window:close'),

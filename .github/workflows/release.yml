@@ -1,0 +1,51 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            ui/package-lock.json
+            desktop/package-lock.json
+      - name: Install UI dependencies
+        run: npm ci
+        working-directory: ui
+      - name: Install desktop dependencies
+        run: npm ci
+        working-directory: desktop
+      - name: Verify version matches tag
+        shell: pwsh
+        run: |
+          $version = (Get-Content desktop/package.json | ConvertFrom-Json).version
+          if ("v$version" -ne "${{ github.ref_name }}") { throw "Tag ${{ github.ref_name }} does not match desktop version $version" }
+      - name: Build UI
+        run: npm run build
+        working-directory: ui
+      - name: Build desktop
+        run: npm run build
+        working-directory: desktop
+      - name: Package Windows updater
+        run: npm run dist
+        working-directory: desktop
+      - name: Publish GitHub Release assets
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: |
+            release/Forge-Setup-*.exe
+            release/Forge-Setup-*.exe.blockmap
+            release/latest.yml
+

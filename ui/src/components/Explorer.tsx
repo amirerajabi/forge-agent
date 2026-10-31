@@ -35,11 +35,11 @@ export function Explorer() {
   useEffect(() => { void refresh(); }, [root]);
   if (!root) return null;
   return (
-    <aside className="explorer">
-      <div className="panel-head"><span>Workspace</span><button className={`icon-button ${loading ? 'spin' : ''}`} title="Refresh" onClick={refresh}><RefreshCw size={14} /></button><button className="icon-button" title="Close explorer" onClick={() => useApp.getState().setExplorerOpen(false)}><PanelRightClose size={15} /></button></div>
+    <div className="explorer">
+      <div className="dock-head"><span>Explorer</span><button className={`icon-button ${loading ? 'spin' : ''}`} title="Refresh" onClick={refresh}><RefreshCw size={14} /></button><button className="icon-button" title="Close explorer" onClick={() => useApp.getState().toggleDock()}><PanelRightClose size={15} /></button></div>
       <div className="workspace-root" title={root}><FolderOpen size={14} /> {root.replaceAll('\\', '/').split('/').at(-1)}</div>
       <div className="tree">{entries.map((entry) => <TreeNode key={entry.path} root={root} entry={entry} depth={0} />)}</div>
-    </aside>
+    </div>
   );
 }
 

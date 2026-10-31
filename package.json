@@ -1,6 +1,6 @@
 {
   "name": "forge-agent",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "scripts": {
     "install:all": "npm --prefix ui install && npm --prefix desktop install",

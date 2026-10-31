@@ -1,14 +1,14 @@
 import { useEffect } from 'react';
 import { Chat } from './components/Chat';
-import { Explorer, FilePreview } from './components/Explorer';
+import { FilePreview } from './components/Explorer';
 import { Settings } from './components/Settings';
-import { CollapsedSidebarButton, Sidebar } from './components/Sidebar';
+import { Dock } from './components/Dock';
+import { StatusBar } from './components/StatusBar';
+import { ToolStripe } from './components/ToolStripe';
+import { TopBar } from './components/TopBar';
 import { activeConversation, useApp } from './store/app';
 
 export default function App() {
-  const sidebarOpen = useApp((state) => state.sidebarOpen);
-  const explorerOpen = useApp((state) => state.explorerOpen);
-  const workspace = useApp((state) => state.workspace);
   const theme = useApp((state) => state.theme);
   const conversation = useApp(activeConversation);
   useEffect(() => {
@@ -21,17 +21,20 @@ export default function App() {
       if (event.key.toLowerCase() === 'n') { event.preventDefault(); useApp.getState().createConversation(); }
       if (event.key.toLowerCase() === 'l') { event.preventDefault(); window.dispatchEvent(new Event('forge:focus-composer')); }
       if (event.key === ',') { event.preventDefault(); useApp.getState().setSettingsOpen(true); }
-      if (event.key.toLowerCase() === 'b') { event.preventDefault(); useApp.getState().setSidebarOpen(!useApp.getState().sidebarOpen); }
+      if (event.key.toLowerCase() === 'b') { event.preventDefault(); useApp.getState().toggleDock(); }
     };
     window.addEventListener('keydown', keydown);
     return () => window.removeEventListener('keydown', keydown);
   }, []);
   useEffect(() => { document.title = `${conversation?.title ?? 'Forge'} — Forge`; }, [conversation?.title]);
-  return <div className="app-shell">
-    <div className="drag-region" />
-    {sidebarOpen ? <Sidebar /> : <CollapsedSidebarButton />}
-    <Chat />
-    {explorerOpen && workspace && <Explorer />}
+  return <div className="app">
+    <TopBar />
+    <div className="main-layout">
+      <ToolStripe />
+      <Dock />
+      <div className="center"><Chat /></div>
+    </div>
+    <StatusBar />
     <Settings />
     <FilePreview />
   </div>;

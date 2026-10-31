@@ -25,9 +25,26 @@ export interface ForgeBridge {
   stopAgent(runId: string): void;
   approveTool(callId: string, allow: boolean, always?: boolean): void;
   onAgentEvent(callback: (payload: { runId: string; event: unknown }) => void): () => void;
+  openExternal(url: string): void;
+  onUpdateStatus(callback: (status: UpdateStatus) => void): () => void;
+  getUpdateStatus(): Promise<UpdateStatus>;
+  checkForUpdates(options?: { manual?: boolean }): Promise<UpdateStatus>;
+  configureUpdates(options: { autoCheck: boolean }): Promise<void>;
+  quitAndInstall(): Promise<boolean>;
+  showNotification(value: { title: string; body: string }): Promise<void>;
   minimize(): void;
   maximize(): void;
   close(): void;
+}
+
+export type UpdateState = 'disabled' | 'idle' | 'checking' | 'up-to-date' | 'available' | 'downloading' | 'ready' | 'error';
+export interface UpdateStatus {
+  state: UpdateState;
+  currentVersion: string;
+  version?: string;
+  percent?: number;
+  message?: string;
+  releaseUrl?: string;
 }
 
 declare global {
@@ -50,6 +67,13 @@ export const platform: ForgeBridge = window.forge ?? {
   stopAgent: () => undefined,
   approveTool: () => undefined,
   onAgentEvent: () => () => undefined,
+  openExternal: (url) => window.open(url, '_blank', 'noopener'),
+  onUpdateStatus: () => () => undefined,
+  getUpdateStatus: async () => ({ state: 'disabled', currentVersion: 'browser', message: 'Desktop updates are unavailable in the browser.' }),
+  checkForUpdates: async () => ({ state: 'disabled', currentVersion: 'browser', message: 'Desktop updates are unavailable in the browser.' }),
+  configureUpdates: async () => undefined,
+  quitAndInstall: async () => false,
+  showNotification: async () => undefined,
   minimize: () => undefined,
   maximize: () => undefined,
   close: () => undefined,

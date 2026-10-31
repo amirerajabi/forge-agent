@@ -2,18 +2,48 @@ appId: dev.forge.agent
 productName: Forge
 directories:
   output: ../release
+  buildResources: build
 files:
-  - out/**
   - package.json
+  - out/main.js
+  - out/preload.js
+  - "!**/*.map"
+asar: true
+npmRebuild: false
+publish:
+  provider: github
+  owner: amirerajabi
+  repo: forge-agent
+  releaseType: release
 extraResources:
   - from: ../ui/dist
     to: ui
+  - from: build/icon.png
+    to: icon.png
+electronFuses:
+  runAsNode: false
+  enableCookieEncryption: true
+  enableNodeOptionsEnvironmentVariable: false
+  enableNodeCliInspectArguments: false
+  enableEmbeddedAsarIntegrityValidation: true
+  onlyLoadAppFromAsar: true
 win:
-  target: nsis
+  target:
+    - target: nsis
+      arch: [x64]
   icon: build/icon.ico
-  artifactName: Forge-${version}-${arch}.${ext}
+  artifactName: Forge-Setup-${version}.${ext}
 nsis:
   oneClick: false
+  perMachine: false
+  allowElevation: true
   allowToChangeInstallationDirectory: true
   createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: Forge
+  installerIcon: build/icon.ico
+  uninstallerIcon: build/icon.ico
+  uninstallDisplayName: Forge ${version}
+  deleteAppDataOnUninstall: false
+  runAfterFinish: true
 

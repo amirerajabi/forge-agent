@@ -18,6 +18,7 @@ interface PersistedState {
   activeConversationId: string | null;
   workspace: string | null;
   theme: Theme;
+  autoCheckUpdates: boolean;
 }
 
 function load(): PersistedState {
@@ -30,9 +31,10 @@ function load(): PersistedState {
       activeConversationId: parsed.activeConversationId ?? parsed.conversations?.[0]?.id ?? null,
       workspace: parsed.workspace ?? null,
       theme: parsed.theme ?? 'dark',
+      autoCheckUpdates: parsed.autoCheckUpdates ?? true,
     };
   } catch {
-    return { providers: [DEFAULT_PROVIDER], activeProviderId: 'glm', conversations: [], activeConversationId: null, workspace: null, theme: 'dark' };
+    return { providers: [DEFAULT_PROVIDER], activeProviderId: 'glm', conversations: [], activeConversationId: null, workspace: null, theme: 'dark', autoCheckUpdates: true };
   }
 }
 
@@ -41,6 +43,8 @@ interface AppState extends PersistedState {
   explorerOpen: boolean;
   sidebarOpen: boolean;
   previewFile: string | null;
+  dockVisible: boolean;
+  dockPanel: 'tasks' | 'explorer';
   hasActiveKey: boolean;
   createConversation(mode?: AgentMode): string;
   selectConversation(id: string): void;
@@ -49,6 +53,9 @@ interface AppState extends PersistedState {
   setConversationMode(mode: AgentMode): void;
   setWorkspace(root: string | null): void;
   setTheme(theme: Theme): void;
+  setAutoCheckUpdates(value: boolean): void;
+  showDock(panel: 'tasks' | 'explorer'): void;
+  toggleDock(panel?: 'tasks' | 'explorer'): void;
   setActiveProvider(id: string): void;
   saveProvider(provider: Provider): void;
   deleteProvider(id: string): void;
@@ -70,6 +77,8 @@ export const useApp = create<AppState>((set, get) => ({
   explorerOpen: true,
   sidebarOpen: true,
   previewFile: null,
+  dockVisible: true,
+  dockPanel: 'tasks',
   hasActiveKey: false,
   createConversation(mode = 'agent') {
     const now = Date.now();
@@ -93,6 +102,13 @@ export const useApp = create<AppState>((set, get) => ({
   },
   setWorkspace: (workspace) => set({ workspace, explorerOpen: Boolean(workspace) }),
   setTheme: (theme) => set({ theme }),
+  setAutoCheckUpdates: (autoCheckUpdates) => set({ autoCheckUpdates }),
+  showDock: (dockPanel) => set({ dockPanel, dockVisible: true }),
+  toggleDock(panel) {
+    const state = get();
+    if (panel && (!state.dockVisible || state.dockPanel !== panel)) set({ dockVisible: true, dockPanel: panel });
+    else set({ dockVisible: !state.dockVisible });
+  },
   setActiveProvider: (activeProviderId) => { set({ activeProviderId }); void get().refreshKeyState(); },
   saveProvider(provider) {
     set((state) => ({ providers: state.providers.some((item) => item.id === provider.id) ? state.providers.map((item) => item.id === provider.id ? provider : item) : [...state.providers, provider], activeProviderId: provider.id }));
@@ -201,7 +217,7 @@ export function initializeApp(): void {
   platform.onAgentEvent(({ runId, event }) => handleEvent(runId, event as AgentEvent));
   void useApp.getState().refreshKeyState();
   useApp.subscribe((state) => {
-    const persisted: PersistedState = { providers: state.providers, activeProviderId: state.activeProviderId, conversations: state.conversations, activeConversationId: state.activeConversationId, workspace: state.workspace, theme: state.theme };
+    const persisted: PersistedState = { providers: state.providers, activeProviderId: state.activeProviderId, conversations: state.conversations, activeConversationId: state.activeConversationId, workspace: state.workspace, theme: state.theme, autoCheckUpdates: state.autoCheckUpdates };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(persisted));
   });
 }

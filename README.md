@@ -16,6 +16,8 @@ Forge is a focused desktop coding agent for GLM and other OpenAI-compatible APIs
 - Dark, light, and system themes
 - Encrypted API-key storage through Electron `safeStorage`
 - Data-driven providers: add another OpenAI-compatible backend from Settings
+- Emdi/Kod-style workbench: top bar, tool stripe, resizable dock, center area, status bar, and sectioned settings
+- GitHub Releases auto-update: background checks/downloads, progress, restart-to-update, and install-on-quit
 
 ## Run in development
 
@@ -42,6 +44,23 @@ npm run dist
 
 The installer is written to `release/`.
 
+## Releases and automatic updates
+
+Forge uses `electron-updater` with the public `amirerajabi/forge-agent` GitHub Releases feed. A Windows release must contain all three generated update assets:
+
+- `Forge-Setup-X.Y.Z.exe`
+- `Forge-Setup-X.Y.Z.exe.blockmap`
+- `latest.yml`
+
+The bundled GitHub Actions workflow builds and uploads these files whenever a version tag is pushed. Before tagging, set the same version in the root, `ui`, and `desktop` package files, commit, then push a matching tag:
+
+```powershell
+git tag v0.3.0
+git push origin main v0.3.0
+```
+
+Installed builds check after startup and every six hours when automatic updates are enabled. New installers download in the background; the status bar and Settings › Updates show progress and offer **Restart now** when ready.
+
 ## Configure GLM
 
 Open **Settings**, then enter:
@@ -55,8 +74,8 @@ Use **Test connection** to verify the endpoint and fetch its model list. Forge a
 ## Architecture
 
 ```text
-desktop/  Electron main process, secure preload bridge, agent loop, provider client, workspace tools
-ui/       React interface, conversations, settings, explorer, Markdown transcript
+desktop/  Electron shell, secure bridge, updater, agent loop, provider client, workspace tools
+ui/       React workbench, conversations, settings, dock/explorer, status bar, Markdown transcript
 scripts/  development and production build entry points
 ```
 

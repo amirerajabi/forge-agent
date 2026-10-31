@@ -1,12 +1,14 @@
-import { app, BrowserWindow, dialog, ipcMain, shell } from 'electron';
+import { app, BrowserWindow, dialog, ipcMain, Notification, shell } from 'electron';
 import path from 'node:path';
 import { promises as fs } from 'node:fs';
 import { approveTool, startAgent, stopAgent, testProvider } from './agent';
 import { hasSecret, setSecret } from './secrets';
 import type { AgentRequest, ProviderConfig } from './types';
+import { createUpdater, type UpdaterController } from './updater';
 import { listDirectory, readTextFile, resolveWorkspacePath } from './workspace';
 
 let mainWindow: BrowserWindow | null = null;
+let updaterReady: Promise<UpdaterController>;
 
 function createWindow(): void {
   const windows = process.platform === 'win32';
@@ -67,12 +69,21 @@ function registerIpc(): void {
   });
   ipcMain.on('agent:stop', (_event, runId: string) => stopAgent(String(runId)));
   ipcMain.on('agent:approve', (_event, callId: string, allow: boolean, always: boolean) => approveTool(String(callId), allow === true, always === true));
+  ipcMain.on('shell:open', (_event, url: string) => { if (/^https:\/\//i.test(String(url))) void shell.openExternal(String(url)); });
+  ipcMain.handle('update:status', async () => (await updaterReady).status);
+  ipcMain.handle('update:check', async (_event, options?: { manual?: boolean }) => (await updaterReady).check({ manual: options?.manual === true }));
+  ipcMain.handle('update:configure', async (_event, options?: { autoCheck?: boolean }) => (await updaterReady).configure({ autoCheck: options?.autoCheck === true }));
+  ipcMain.handle('update:install', async () => (await updaterReady).install());
+  ipcMain.handle('notify', (_event, value: { title?: string; body?: string }) => {
+    if (mainWindow && !mainWindow.isFocused() && Notification.isSupported()) new Notification({ title: String(value?.title ?? 'Forge'), body: String(value?.body ?? '') }).show();
+  });
   ipcMain.on('window:minimize', () => mainWindow?.minimize());
   ipcMain.on('window:maximize', () => mainWindow?.isMaximized() ? mainWindow.unmaximize() : mainWindow?.maximize());
   ipcMain.on('window:close', () => mainWindow?.close());
 }
 
 app.whenReady().then(() => {
+  updaterReady = createUpdater((message) => console.log(`[updates] ${message}`));
   registerIpc();
   createWindow();
   app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
@@ -81,4 +92,6 @@ app.whenReady().then(() => {
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
 });
+
+app.on('before-quit', () => { void updaterReady?.then((updater) => updater.dispose()); });
 
